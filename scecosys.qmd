@@ -15,11 +15,8 @@ format:
 - defining "ecosystem"
 - views of a benchmarking system
 - characteristic experiments in single-cell RNA-seq
-- a look at scATAC-seq, catlas.org
-- concept of a regulated software ecosystem
 - examples
     - reference-based classification
-    - cluster definition/assignment/visualization
     - inference on aspects of gene expression
 
 ## Ecosystem formalism
@@ -36,12 +33,16 @@ format:
 
 ## Upshots
 
+- working from single-cell atlases may become common approach for
+research in genome biology; artifact removal and assurance of
+validity are important components
 - method evaluation is empirical
 - metrics are ad hoc
 - additional questions
-    - "did a given single-cell experiment achieve its scientific aim"?
-    - "what are the implications for experimental design?"
-    - "is biological variation _in a human population_ accurately measurable with current designs/atlases?"
+    - Did a given single-cell experiment achieve its scientific aim?
+    - What are the implications for experimental design?
+        - for potential atlas contributors, and for users -- "analysis design"?
+    - Is biological variation _in a human population_ accurately measurable with current designs/atlases?
         - accurate for what purpose?
 
 ## scRNAseq package snapshot
@@ -136,10 +137,35 @@ mydf = data.frame(pcs, type=zblood$`Major cell type`)
 plot_ly(mydf, x=~PC2, y=~PC4, color=~type, text=~type)
 ```
 
+## Upshots
+
+- SingleCellExperiment is a compact container for
+multisample sc-RNA-seq, etc.
+- arbitrary metadata for features and samples
+- efficient representation of assay outputs
+```{r lksp,echo=TRUE}
+assay(zblood[1:4,1:5])
+assay(zblood["GAPDH",1:5])
+```
+- simple array-oriented syntax; tidy transcriptomics also
+
+## Next steps
+
+- Zilionis data were obtained with labels already assigned:
+"Major cell types were defined by a Bayesian cell classifier with bulk whole-transcriptome profiles of FACS-sorted cell populations."
+
+- We'll use [SingleR](https://bioconductor.org/books/release/SingleRBook/introduction.html#method-description) to reclassify, using a reference called HumanPrimaryCellAtlas
+
+- [postponed] We'll use a new algorithm for differential expression inference to
+compare expression patterns of T-cells in blood and tumor for 
+a given patient
+
+- We'll have a look at aspects of cellxgene.census in a workshop instance
 
 ## Relabeling -- scalability {.larger}
 
 ```
+> hpca = celldex::HumanPrimaryCellAtlasData()
 > library(BiocParallel)
 > myp = MulticoreParam(4)
 > system.time(s1 <- SingleR(zblood, hpca, 
@@ -154,4 +180,16 @@ plot_ly(mydf, x=~PC2, y=~PC4, color=~type, text=~type)
 
 ## Relabeling -- outcome
 
+Rows are SingleR, columns are Zilionis "Bayesian"
+
 ![](relabeling.png)
+
+## Conclusions
+
+- OSCA and SingleR books are useful on-ramps to single-cell
+analysis in R
+- workshop.bioconductor.org has various learning materials
+- standard data "containers" simplify filtering and analyzing
+single cell experiments
+- cellxgene.census was illustrated in the workshop document
+-  
