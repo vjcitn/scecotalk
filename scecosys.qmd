@@ -1,0 +1,157 @@
+---
+title: "Analysis ecosystems for single cell biology"
+subtitle: "CDNM Fellows May 2024"
+author: "Vince Carey"
+format: 
+  revealjs:
+    margin: -0.01
+    mainfont: "Times New Roman"
+    smaller: true
+    scrollable: true
+---
+
+## Road map {.smaller}
+
+- defining "ecosystem"
+- views of a benchmarking system
+- characteristic experiments in single-cell RNA-seq
+- a look at scATAC-seq, catlas.org
+- concept of a regulated software ecosystem
+- examples
+    - reference-based classification
+    - cluster definition/assignment/visualization
+    - inference on aspects of gene expression
+
+## Ecosystem formalism
+
+![](eco.png)
+
+## Benchmarking task (PMID [34949812](https://pubmed.gov/34949812)) for integrating atlas components {.smaller}
+
+![](TheisBenchRNA.png)
+
+## Benchmarking design
+
+![](benchDes.png)
+
+## Upshots
+
+- method evaluation is empirical
+- metrics are ad hoc
+- additional questions
+    - "did a given single-cell experiment achieve its scientific aim"?
+    - "what are the implications for experimental design?"
+    - "is biological variation _in a human population_ accurately measurable with current designs/atlases?"
+        - accurate for what purpose?
+
+## scRNAseq package snapshot
+
+```{r lkdr,echo=FALSE}
+source("process_bib.R")
+datasetsPage()
+```
+## Using it
+
+:::: {.columns}
+
+::: {.column width="52%"}
+```{r lkz, echo=TRUE, cache=TRUE}
+library(scRNAseq)
+zs = ZilionisLungData()
+zs
+```
+:::
+
+::: {.column width="48%"}
+![](SEschema.png)
+:::
+
+::::
+
+## SingleCellExperiment class
+
+![](SCEschema.png)
+
+## Simple exploration
+
+:::: {.columns}
+
+::: {.column width="40%"}
+```{r domore,echo=TRUE,message=FALSE}
+library(scuttle)
+library(scater)
+bad = which(
+  colSums(assay(zs))==0
+  )
+zs = zs[,-bad]
+zs = logNormCounts(zs)
+# irlba:
+zs = runPCA(zs)
+zs2 = zs[,-which(
+   is.na(zs$`Major cell type`))]
+zs2
+```
+:::
+
+::: {.column width="60%"}
+
+```{r lkpl}
+plotPCA(zs2,colour_by="Major cell type")
+```
+
+:::
+
+::::
+
+## More PCs
+
+```{r lkpl2, echo=TRUE}
+plotPCA(zs2, colour_by="Major cell type", 
+   ncomponents=4, point_size=.5)
+```
+
+## Patient effect
+
+```{r lkpl3, echo=TRUE}
+plotPCA(zs2, colour_by="Patient", 
+   ncomponents=4, point_size=.5)
+```
+
+## Drilling down on blood cells
+
+```{r subset}
+zblood = zs2[, which(zs2$Tissue == "blood")]
+zblood
+table(zblood$`Major cell type`)
+```
+
+## Interactive visualization of some PCs
+
+```{r getpl,echo=FALSE,message=FALSE}
+library(plotly)
+```
+```{r lkviz}
+pcs = reducedDim(zblood, "PCA")
+mydf = data.frame(pcs, type=zblood$`Major cell type`)
+plot_ly(mydf, x=~PC2, y=~PC4, color=~type, text=~type)
+```
+
+
+## Relabeling -- scalability {.larger}
+
+```
+> library(BiocParallel)
+> myp = MulticoreParam(4)
+> system.time(s1 <- SingleR(zblood, hpca, 
+     hpca$label.main, BPPARAM=myp))
+   user  system elapsed 
+ 94.173   0.030  24.908 
+> system.time(s1 <- SingleR(zblood, hpca, 
+     hpca$label.main, BPPARAM=SerialParam()))
+   user  system elapsed 
+ 72.842   0.064  72.955 
+```
+
+## Relabeling -- outcome
+
+![](relabeling.png)
