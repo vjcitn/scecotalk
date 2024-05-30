@@ -192,4 +192,5 @@ analysis in R
 - standard data "containers" simplify filtering and analyzing
 single cell experiments
 - cellxgene.census was illustrated in the workshop document
--  
+- approaches to integrative processing of atlas elements can be benchmarked
+with tooling at https://github.com/theislab/scib but recommendations are complex
